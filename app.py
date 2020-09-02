@@ -29,7 +29,7 @@ start_year = str(int(date_pieces[0]) - 1)
 ltm_start_date = f'{start_year}-{date_pieces[1]}-{date_pieces[2]}'
 
 # input arbitrary start and end date
-input_start_date = '2015-08-23'
+input_start_date = '2013-05-20'
 input_end_date = '2017-05-20'
 
 # Init app
@@ -101,18 +101,27 @@ def tobs():
     top_station_tobs_dict = {'temp_obs_for_top_station': [dict(top_station_tobs)]}
     return jsonify(top_station_tobs_dict)
 
-#@app.route('/v1.0/<start>', defaults={'end': None}')
 @app.route('/v1.0/<start>')
-def temp_start(start):
+@app.route('/v1.0/<start>/<end>')
+def temp_start(start=input_start_date, end=input_end_date):
     """Return a JSON list of the minimum temperature, the average temperature, 
         and the max temperature for a given start or start-end range."""
 
     session = Session(engine)
-    temps = session.query(func.min(Measurement.tobs), 
-                            func.avg(Measurement.tobs), 
-                            func.max(Measurement.tobs)).\
-                                filter(Measurement.date >= start).\
-                                    all()
+
+    if end == None:
+        temps = session.query(func.min(Measurement.tobs), 
+                                func.avg(Measurement.tobs), 
+                                func.max(Measurement.tobs)).\
+                                    filter(Measurement.date >= start).\
+                                        all()
+    else:
+        temps = session.query(func.min(Measurement.tobs), 
+                                func.avg(Measurement.tobs), 
+                                func.max(Measurement.tobs)).\
+                                    filter(Measurement.date >= start).\
+                                        filter(Measurement.date <= end).\
+                                        all()
 
     session.close()
 
