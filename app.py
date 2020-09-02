@@ -54,17 +54,18 @@ def prcp():
     """Returns precipitation data based on a start date."""
 
     session = Session(engine)
-    results = session.query(Measurement.date, Measurement.prcp).\
+    prcp = session.query(Measurement.date, Measurement.prcp).\
                 filter(Measurement.date >= ltm_start_date).\
                     order_by(Measurement.date.asc()).\
                         all()
-
     session.close()
 
-    prcp_dict = {}
-    for date, prcp in results:
-        prcp_dict.setdefault(date, []).append(prcp)
+    #prcp_dict ={'precipitation_data': dict(prcp)}
+    prcp_obs_by_date = {}
+    for date, prcp in prcp:
+        prcp_obs_by_date.setdefault(date, []).append(prcp)
     
+    prcp_dict = {'precipitation': prcp_obs_by_date}
     return jsonify(prcp_dict)
 
 @app.route('/v1.0/stations')
@@ -73,12 +74,10 @@ def stations():
 
     session = Session(engine)
     stations = session.query(Station.station)
-
     session.close()
-
-    stations_dict = {idx: value for idx, value in enumerate(stations)}
     
-    return jsonify(stations_dict)
+    station_dict = {'stations': [station[0] for station in stations]}
+    return jsonify(station_dict)
 
 @app.route('/v1.0/tobs')
 def tobs():
@@ -99,10 +98,7 @@ def tobs():
     
     session.close()
 
-    top_station_tobs_dict = {}
-    for date, tobs in top_station_tobs:
-        top_station_tobs_dict.setdefault(date, []).append(tobs) 
-
+    top_station_tobs_dict = {'temp_obs_for_top_station': [dict(top_station_tobs)]}
     return jsonify(top_station_tobs_dict)
 
 #@app.route('/v1.0/<start>', defaults={'end': None}')
